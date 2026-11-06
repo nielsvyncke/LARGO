@@ -1,0 +1,98 @@
+{
+    "schema": "https://github.com/Project-MONAI/MONAI-extra-test-data/releases/download/0.8.1/meta_schema_20220324.json",
+    "version": "1.0.0",
+    "changelog": {
+        "1.0.0": "public release accompanying the NeurIPS 2026 paper"
+    },
+    "monai_version": "1.4.0",
+    "pytorch_version": "2.4.1",
+    "numpy_version": "1.26.4",
+    "required_packages_version": {
+        "pytorch-ignite": "0.5.1",
+        "nibabel": "5.3.2",
+        "scikit-learn": "1.5.2",
+        "tensorboard": "2.18.0"
+    },
+    "name": "LARGO: Low-Rank Hypernetwork for Handling Missing Modalities",
+    "task": "Brain tumor segmentation from any subset of the four BraTS 2018 MRI modalities",
+    "description": "A single hypernetwork that compresses the 15 dedicated missing-modality nnU-Nets of BraTS 2018 into the parameter budget of one network, using the canonical polyadic (CP) decomposition of the convolutional kernels. The available modality subset selects one row of the CP model factor at run time.",
+    "authors": "Niels Vyncke, Pooya Ashtari, Aleksandra Pizurica",
+    "copyright": "Copyright (c) 2026 Niels Vyncke, Ghent University",
+    "data_source": "https://www.med.upenn.edu/sbia/brats2018/data.html",
+    "data_type": "NIfTI",
+    "image_classes": "Up to 4-channel MRI: FLAIR, T1-weighted (T1), T1-weighted contrast-enhanced (T1c), T2-weighted (T2), resampled to 1x1x1 mm. Any non-empty subset of the four modalities is a valid input; the subset is passed as the index `mod`.",
+    "label_classes": {
+        "description": "3-channel segmentation labels (nested BraTS regions):",
+        "channels": {
+            "0": "Enhancing tumor (ET)",
+            "1": "Tumor core (TC)",
+            "2": "Whole tumor (WT)"
+        }
+    },
+    "pred_classes": {
+        "description": "3-channel prediction outputs, corresponding to the label channels:",
+        "channels": {
+            "0": "Enhancing tumor (ET)",
+            "1": "Tumor core (TC)",
+            "2": "Whole tumor (WT)"
+        }
+    },
+    "eval_metrics": {
+        "val_mean_dice": 0.7641,
+        "val_mean_dice_wt": 0.8705,
+        "val_mean_dice_tc": 0.7935,
+        "val_mean_dice_et": 0.6283
+    },
+    "intended_use": "This model is intended for research purposes only and is not approved for clinical or diagnostic use.",
+    "references": [
+        "Vyncke, N., Ashtari, P., & Pizurica, A. (2026). LARGO: Low-Rank Hypernetwork for Handling Missing Modalities. NeurIPS 2026. https://arxiv.org/abs/2605.06086",
+        "Isensee, F., Jaeger, P. F., Kohl, S. A. A., Petersen, J., & Maier-Hein, K. H. (2021). nnU-Net: A self-configuring method for deep learning-based biomedical image segmentation. Nature Methods, 18(2), 203-211."
+    ],
+    "network_data_format": {
+        "inputs": {
+            "image": {
+                "type": "image",
+                "format": "magnitude",
+                "modality": "MRI",
+                "num_channels": 4,
+                "spatial_shape": [
+                    "16*n",
+                    "16*n",
+                    "16*n"
+                ],
+                "dtype": "float32",
+                "value_range": [],
+                "is_patch_data": true,
+                "channel_def": {
+                    "0": "FLAIR",
+                    "1": "T1",
+                    "2": "T1c",
+                    "3": "T2"
+                }
+            }
+        },
+        "outputs": {
+            "pred": {
+                "type": "image",
+                "format": "segmentation",
+                "num_channels": 3,
+                "spatial_shape": [
+                    "16*n",
+                    "16*n",
+                    "16*n"
+                ],
+                "dtype": "float32",
+                "value_range": [
+                    0,
+                    1
+                ],
+                "is_patch_data": true,
+                "channel_def": {
+                    "0": "enhancing tumor",
+                    "1": "tumor core",
+                    "2": "whole tumor"
+                }
+            }
+        }
+    }
+}

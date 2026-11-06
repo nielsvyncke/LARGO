@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.conda/
+
+# experiment outputs
+logs/
+outputs/
+models/*.pt
+*.pt
+*.pth
+*.ckpt
+events.out.tfevents.*
+
+# data
+data/
+*.nii
+*.nii.gz
+
+# editors and OS
+.vscode/
+.idea/
+.DS_Store

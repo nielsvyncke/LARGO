@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.4
+pytorch-ignite==0.5.1
+monai[fire]==1.4.0
+numpy
+scipy
+scikit-learn
+nibabel
+pyyaml
+tensorboard

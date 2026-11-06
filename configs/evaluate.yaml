@@ -1,0 +1,72 @@
+# Evaluation of a trained LARGO checkpoint on the validation fold. Used together with train.yaml:
+#
+#   python -m monai.bundle run --config_file "['configs/train.yaml','configs/evaluate.yaml']" \
+#       --data_dir /path/to/brats2018/training --fold 0 --ckpt_path logs/<run>/model_fold=0_checkpoint_epoch=750.pt
+#
+# `--mod k` evaluates every validation case with modality subset k (0..14, see README);
+# without it, each case uses the subset stored in its `mod` field of the datalist.
+
+mod: null
+amp: false
+save_pred: false      # set to true to write the predicted label maps (BraTS classes 1, 2, 4)
+
+output_dir: "$datetime.datetime.now().strftime(os.path.join(@logs_dir, 'eval_fold{0}_mod{1}_%y%m%d_%H%M%S'.format(@fold, @mod if @mod is not None else 'datalist')))"
+save_pred_dir: $os.path.join(@output_dir, 'predictions')
+
+val_postprocessing:
+    _target_: Compose
+    transforms:
+        - _target_: Activationsd
+          keys: pred
+          sigmoid: true
+        - _target_: AsDiscreted
+          keys: pred
+          threshold: 0.5
+        - _target_: SplitDimd
+          keys: [pred, label]
+          output_postfixes: [et, tc, wt]
+        # BraTS convention: discard enhancing-tumor predictions smaller than 500 voxels
+        - _target_: Lambdad
+          keys: pred_et
+          func: "$lambda x: torch.zeros_like(x) if x.sum() < 500 else x"
+        - _target_: ConcatItemsd
+          keys: [pred_et, pred_tc, pred_wt]
+          name: pred
+        - _target_: CopyItemsd
+          keys: pred
+          names: pred_labelmap
+          times: 1
+        - _target_: Lambdad
+          keys: pred_labelmap
+          func: "$lambda x: torch.where(x[[0]] > 0, 4, torch.where(x[[1]] > 0, 1, torch.where(x[[2]] > 0, 2, 0)))"
+        - _target_: SaveImaged
+          _disabled_: $not @save_pred
+          keys: pred_labelmap
+          meta_keys: pred_meta_dict
+          output_dir: "@save_pred_dir"
+          output_postfix: seg
+          output_dtype: uint8
+          resample: false
+          squeeze_end_dims: true
+
+val_handlers:
+    - _target_: scripts.CheckpointLoader
+      load_path: "@ckpt_path"
+      load_dict:
+          model: "@network"
+    - _target_: StatsHandler
+      iteration_log: false
+    - _target_: MetricsSaver
+      save_dir: $os.path.join(@output_dir, 'metrics')
+      metrics: "*"
+      metric_details: "*"
+      # case name of each row: taken from the first loaded image file
+      batch_transform: "$lambda b: [x['image'].meta for x in b] if isinstance(b, list) else b['image'].meta"
+      summary_ops: "*"
+
+initialize:
+    - "$print('Output directory:', @output_dir)"
+    - $setattr(torch.backends.cudnn, 'benchmark', True)
+
+run:
+    - $@evaluator.run()

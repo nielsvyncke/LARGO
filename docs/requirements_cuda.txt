@@ -1,0 +1,11 @@
+# Default PyPI wheels ship with CUDA support on Linux; pick another CUDA build from
+# https://pytorch.org/get-started/locally/ if your driver requires it.
+torch>=2.4
+pytorch-ignite==0.5.1
+monai[fire]==1.4.0
+numpy
+scipy
+scikit-learn
+nibabel
+pyyaml
+tensorboard
